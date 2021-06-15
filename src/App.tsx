@@ -1,10 +1,11 @@
 import './App.css';
 import Menu from './utils/Menu';
 import { Switch, Route } from 'react-router';
-import GenresIndex from './genres/GenresIndex';
 import { BrowserRouter } from 'react-router-dom';
-import LandingPage from './LandingPage';
 import routes from './Route-Config';
+import configureValidations from './validations';
+
+configureValidations();
 
 function App() {
   return (
