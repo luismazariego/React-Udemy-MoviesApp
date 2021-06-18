@@ -1,7 +1,7 @@
-import { Formik, Form, FormikHelpers } from "formik";
-import { Link } from "react-router-dom";
-import Button from "../utils/Buttom";
-import FormGroupText from "../utils/FormGroupText";
+import { Formik, Form, FormikHelpers } from 'formik';
+import { Link } from 'react-router-dom';
+import Button from '../utils/Buttom';
+import FormGroupText from '../utils/FormGroupText';
 import * as Yup from 'yup';
 import { createGenreDTO } from './genre.model';
 
@@ -18,7 +18,10 @@ export default function GenreForm(props: genreFormProps) {
         // }}
         onSubmit={props.onSubmit}
         validationSchema={Yup.object({
-          name: Yup.string().required('Required field').capitalFirstCharacter(),
+          name: Yup.string()
+            .required('Required field')
+            .max(50, 'Max lenght is 50 characters')
+            .capitalFirstCharacter(),
         })}
       >
         {(formikProps) => (
@@ -33,7 +36,7 @@ export default function GenreForm(props: genreFormProps) {
           </Form>
         )}
       </Formik>
-      ;
+      
     </>
   );
 }

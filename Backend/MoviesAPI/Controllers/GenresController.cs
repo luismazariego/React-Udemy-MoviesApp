@@ -1,8 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MoviesAPI.DTOs;
 using MoviesAPI.Entities;
+using MoviesAPI.Utils;
 
 namespace MoviesAPI.Controllers
 {
@@ -10,32 +17,44 @@ namespace MoviesAPI.Controllers
     [ApiController]
     public class GenresController : ControllerBase
     {
-        private readonly ILogger<GenresController> logger;
+        private readonly ILogger<GenresController> _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public GenresController(ILogger<GenresController> logger)
+        public GenresController(ILogger<GenresController> logger, ApplicationDbContext context, IMapper mapper)
         {
-            this.logger = logger;
+            _logger = logger;
+            _context = context;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public List<Genre> Get()
+        public async Task<ActionResult<List<GenreDTO>>> Get([FromQuery] PaginationDTO pagination)
         {
-            return new List<Genre>{
-                new Genre{Id=1,Name="Comedy"},
-                new Genre{Id=2,Name="Drama"}
-            };
+            var genresQueryableList = _context.Genres.AsQueryable();
+            await HttpContext.SetMetadataHeader(genresQueryableList).ConfigureAwait(false);
+            
+            IEnumerable<Genre> genresList = await genresQueryableList
+                .OrderBy(x => x.Name)
+                .Pagination(pagination)
+                .ToListAsync();
+
+            return _mapper.Map<List<GenreDTO>>(genresList);
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<Genre> Get(int id)
+        public ActionResult<GenreDTO> Get(int id)
         {
             throw new NotImplementedException();
         }
 
         [HttpPost]
-        public ActionResult Post([FromBody] Genre genre)
+        public async Task<ActionResult> Post([FromBody] CreateGenreDTO genre)
         {
-            throw new NotImplementedException();
+            var genreToSave = _mapper.Map<Genre>(genre);
+            _context.Add(genreToSave);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         [HttpDelete]
