@@ -33,7 +33,7 @@ namespace MoviesAPI.Controllers
         {
             var genresQueryableList = _context.Genres.AsQueryable();
             await HttpContext.SetMetadataHeader(genresQueryableList).ConfigureAwait(false);
-            
+
             IEnumerable<Genre> genresList = await genresQueryableList
                 .OrderBy(x => x.Name)
                 .Pagination(pagination)
@@ -43,9 +43,16 @@ namespace MoviesAPI.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<GenreDTO> Get(int id)
+        public async Task<ActionResult<GenreDTO>> Get(int id)
         {
-            throw new NotImplementedException();
+            Genre genre = await _context.Genres.FirstOrDefaultAsync(x => x.Id == id);
+
+            if (genre is null)
+            {
+                return NotFound();
+            }
+
+            return _mapper.Map<GenreDTO>(genre);
         }
 
         [HttpPost]
@@ -57,16 +64,40 @@ namespace MoviesAPI.Controllers
             return NoContent();
         }
 
-        [HttpDelete]
-        public void Delete()
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> Delete(int id)
         {
-            throw new NotImplementedException();
+            //do not needed to get all of the data, just see if there is any record with
+            //an specific Id
+            bool exist = await _context.Genres.AnyAsync(x => x.Id == id);
+
+            if (!exist)
+            {
+                return NotFound();
+            }
+
+            _context.Remove(new Genre() { Id = id });
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
-        [HttpPut]
-        public ActionResult Put()
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> Put(int id, [FromBody] CreateGenreDTO genreToUpdate)
         {
-            throw new NotImplementedException();
+            Genre genre = await _context.Genres.FirstOrDefaultAsync(x => x.Id == id);
+
+            if (genre is null)
+            {
+                return NotFound();
+            }
+
+            genre = _mapper.Map(genreToUpdate, genre);
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
+        
     }
 }
